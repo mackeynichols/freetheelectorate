@@ -177,7 +177,7 @@ function onEachFeature(feature, layer) {
         mouseover: function()
         {
           // Add textual info for polygon on top of doughnut chart
-          $('#charts').prepend("<h5>" + titleCase(feature.properties.ENGLISH_NA.replace("--", " - ")) + " / "+ titleCase(feature.properties.FRENCH_NAM.replace("--", " - ")) + "</h5>")
+          $('#charts').prepend("<h5>" + titleCase(feature.properties.ENGLISH_NA.replace(/--/g, " - ")) + " / "+ titleCase(feature.properties.FRENCH_NAM.replace("--", " - ")) + "</h5>")
           
           data = []
           labels = []
@@ -247,7 +247,7 @@ function onEachFeature(feature, layer) {
             map.fitBounds(layer.getBounds());
             chloropleth.clearLayers()
             console.log("Clicked on " + feature.properties.ED_ID)
-            showPd('pdvotescastdata.geojson',feature.properties.ED_ID)
+            showPd('file:///C:/Users/mackenzien/Documents/MKN/git/preomap/pdvotescastdata_simplified.geojson',feature.properties.ED_ID)
           }
     });
 }
