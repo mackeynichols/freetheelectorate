@@ -15,11 +15,19 @@ body { margin:0; padding:0; }
 #charts{
   position:fixed;
   bottom: -1%;
-  width: 35%;
+  width: 30%;
   height: 50%;
   z-index: 99;
   display: none;
   background: rgba(245,245,245,0.9);
+}
+
+#charts2{
+    position: fixed;
+    top: 20%;
+    right: 5%;
+    background: rgba(245,245,245,0.9);
+    z-index: 99;
 }
 
 #sidebar-toggle{

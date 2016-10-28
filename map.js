@@ -253,6 +253,9 @@ function onEachFeature(feature, layer) {
         {
           // Add textual info for polygon on top of doughnut chart
           $('#charts').prepend("<h4>" + titleCase(feature.properties.ENGLISH_NA.replace(/--/g, " - ")) + " / "+ titleCase(feature.properties.FRENCH_NAM.replace("--", " - ")) + "</h4>")
+          $("#charts").append("<table> <tr> <th>Totals Electors</th><th>Voter Turnout</th><th>Ballots Rejected</th><th>Ballots Left Unmarked</th> </tr>"+
+          "<tr><td>"+feature.properties[year]["ELECTORS"]["value"]+"</td><td>"+feature.properties[year]["VOTER_TURNOUT"]["value"]+"</td><td>"+feature.properties[year]["REJECTED"]["value"]+"</td><td>"+feature.properties[year]["UNMARKED"]["value"]+"</td></tr>"+
+          "</table>")
           
           data = []
           labels = []
@@ -346,6 +349,9 @@ function onEachFeaturePd(feature, layer) {
         {
           // Add textual info for polygon on top of doughnut chart
           $('#charts').prepend("<h5> Polling Division #" + feature.properties.POLL_DIVIS +"</h5>")
+          $("#charts").append("<table> <tr> <th>Totals Electors</th><th>Voter Turnout</th><th>Ballots Rejected</th><th>Ballots Left Unmarked</th> </tr>"+
+          "<tr><td>"+feature.properties[year]["ELECTORS"]["value"]+"</td><td>"+feature.properties[year]["VOTER_TURNOUT"]["value"]+"</td><td>"+feature.properties[year]["REJECTED"]["value"]+"</td><td>"+feature.properties[year]["UNMARKED"]["value"]+"</td></tr>"+
+          "</table>")
           
           data = []
           labels = []
