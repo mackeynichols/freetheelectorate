@@ -4,11 +4,48 @@ var year = "2011";
 var mapVariable = "VOTER_TURNOUT";
 var valueType = "value";
 var mode = "electors"
+var edpd = "ed"
 var ctx = document.getElementById("myChart");
+var pdFile = ""
+var thisEd = ""
+var chloropleth = new L.LayerGroup();
 
 
-var map = L.mapbox.map('map', 'mapbox.streets', {zoomControl: false})
 
+var map = L.mapbox.map('map', 'mapbox.light', {zoomControl: false})
+
+// Function to ensure the legend matches the map
+function legendToggle()
+{
+   
+  switch(mapVariable)
+  {
+    case "VOTER_TURNOUT":
+      
+      document.getElementById('legend').innerHTML = "<h4> Voter Turnout </h4> Darker means a higher percentage or electors turned out"
+      break
+      
+    case "REJECTED":
+      document.getElementById('legend').innerHTML = "<h4> Ballots Rejected </h4> Darker means a higher percentage of ballots were illegible"
+      break
+     
+    case "UNMARKED":
+      document.getElementById('legend').innerHTML = "<h4> Unmarked Ballots </h4> Darker means a higher percentage of ballots were left blank"
+      break
+      
+    case "WINNER":
+      document.getElementById('legend').innerHTML = "<h4> Winning Parties </h4> Colors indicate the winning party"
+      break
+      
+    case "LIBERAL":
+    case "CONSERVATIVE":
+    case "NDP":
+      document.getElementById('legend').innerHTML = "<h4> "+titleCase(mapVariable)+" Votes </h4> Darker means a higher percentage of voters for the selected party"
+      break
+      
+  }
+  $("#legend").fadeIn()
+}
 
 // Convert strings to 'Uppercase First Letter For Each Word In String' format
 function titleCase(str)
@@ -25,7 +62,8 @@ function showEd(json)
       if (xhttp.readyState == 4 && xhttp.status == 200) 
       {
         chloropleth = L.geoJson(JSON.parse(xhttp.responseText),{style: style, onEachFeature: onEachFeature}).addTo(map)
-        $(".loader").fadeOut()
+        if(pdFile != "")
+        {$(".loader").fadeOut()}
       }
   }
   xhttp.open("GET", json, true);
@@ -34,6 +72,42 @@ function showEd(json)
 
 function showPd(json, edid)
 {
+  if(pdFile == "")
+  {
+    
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() 
+    {
+        if (xhttp.readyState == 4 && xhttp.status == 200) 
+        {
+          pdSlice = []
+          pdFile = JSON.parse(xhttp.responseText)
+          console.log("PD FILE LOADED")
+          $(".loader").fadeOut()
+
+        }
+    }
+    xhttp.open("GET", json, true);
+    xhttp.send();
+  }
+  else
+  {
+    for(i in pdFile["features"])
+    {
+      polygon = pdFile["features"][i]
+      //console.log(polygon)
+      if(parseInt(polygon['properties']['ED_ID']) == parseInt(edid))
+      {
+        pdSlice.push(polygon)
+      }
+    }
+    chloropleth = L.geoJson(pdSlice,{style: style, onEachFeature: onEachFeaturePd}).addTo(map)
+    
+    $(".loader").fadeOut()
+    edpd = "pd"
+  }
+}
+/*
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() 
   {
@@ -41,35 +115,39 @@ function showPd(json, edid)
       {
         pdSlice = []
         pdFile = JSON.parse(xhttp.responseText)
-        for(polygon in pdFile)
+        //console.dir(pdFile["features"])
+        for(i in pdFile["features"])
         {
-          console.log(polygon)
+          polygon = pdFile["features"][i]
+          //console.log(polygon)
           if(parseInt(polygon['properties']['ED_ID']) == parseInt(edid))
           {
             pdSlice.push(polygon)
           }
         }
-        chloropleth = L.geoJson(pdSlice,{style: style, onEachFeature: onEachFeature}).addTo(map)
+        chloropleth = L.geoJson(pdSlice,{style: style, onEachFeature: onEachFeaturePd}).addTo(map)
         $(".loader").fadeOut()
       }
   }
   xhttp.open("GET", json, true);
   xhttp.send();
 }
+*/
 
 function style(feature) {
-  
+  if(feature.properties[year]['ELECTORS'] != undefined)
+  {
     return {
         fillColor: getColor(feature.properties[year][mapVariable], feature.properties[year]['ELECTORS']['value']),
         weight: 1,
         opacity: 1,
-        color: 'white',
+        color: 'black',
         fillOpacity: 0.6
     };
+  }
 }
 
 function getColor(c, d) {
-  console.log(mapVariable)
   switch(mapVariable)
   {
     case 'VOTER_TURNOUT':
@@ -84,25 +162,25 @@ function getColor(c, d) {
              d > minVal+ (2*diff/8)  ? '#FEB24C' :
              d > minVal+ (1*diff/8)   ? '#FED976' :
                                         '#FFEDA0';*/
-      return d >= 0.55 ? '#8c2d04' :
-             d >= 0.525 ? '#d94801' :
-             d >= 0.5 ? '#f16913':
-             d >= 0.475 ? '#fd8d3c' :
-             d >= 0.45 ? '#fdae6b' :
-             d >= 0.425 ? '#fdd0a2' :
-             d >= 0.4 ? '#feedde':
+      return d >= 0.55 ? '#252525' :
+             d >= 0.525 ? '#525252' :
+             d >= 0.5 ? '#737373':
+             d >= 0.475 ? '#969696' :
+             d >= 0.45 ? '#bdbdbd' :
+             d >= 0.425 ? '#d9d9d9' :
+             d >= 0.4 ? '#f7f7f7':
                         '#ffffff'
       
     case 'REJECTED':
     case 'UNMARKED':
 
       d = c['value'] / d
-      console.log(d)
-      return d >= 0.00125 ? '#8c2d04' :
-             d >= 0.001 ? '#d94801' :
-             d >= 0.00075 ? '#f16913':
-             d >= 0.0005 ? '#fd8d3c' :
-             d >= 0.00025 ? '#fdae6b' :
+      //console.log(d)
+      return d >= 0.00125 ? '#252525' :
+             d >= 0.001 ? '#636363' :
+             d >= 0.00075 ? '#969696':
+             d >= 0.0005 ? '#cccccc' :
+             d >= 0.00025 ? '#f7f7f7' :
                         '#ffffff'
       
     case 'WINNER':
@@ -148,17 +226,14 @@ function getColor(c, d) {
       if(c !== undefined)
       {
         c = c['value'] / d
-        return c >= 0.6 ? '#8c2d04' :
-               c >= 0.5 ? '#d94801' :
-               c >= 0.4 ? '#f16913':
-               c >= 0.3 ? '#fd8d3c' :
-               c >= 0.2 ? '#fdae6b' :
-               c >= 0.1 ? '#fdd0a2' :
-               '#feedde'
-      }else{return '#feedde'}
-      
-      
-
+        return c >= 0.6 ? '#252525' :
+               c >= 0.5 ? '#636363' :
+               c >= 0.4 ? '#969696' :
+               c >= 0.3 ? '#bdbdbd' :
+               c >= 0.2 ? '#d9d9d9' :
+               c >= 0.1 ? '#f7f7f7' :
+               '#ffffff'
+      }else{return '#ffffff'}
   }
 }
 
@@ -177,7 +252,7 @@ function onEachFeature(feature, layer) {
         mouseover: function()
         {
           // Add textual info for polygon on top of doughnut chart
-          $('#charts').prepend("<h5>" + titleCase(feature.properties.ENGLISH_NA.replace(/--/g, " - ")) + " / "+ titleCase(feature.properties.FRENCH_NAM.replace("--", " - ")) + "</h5>")
+          $('#charts').prepend("<h4>" + titleCase(feature.properties.ENGLISH_NA.replace(/--/g, " - ")) + " / "+ titleCase(feature.properties.FRENCH_NAM.replace("--", " - ")) + "</h4>")
           
           data = []
           labels = []
@@ -200,7 +275,7 @@ function onEachFeature(feature, layer) {
           // Create a "didnt vote" data, label, and color
           data.push(parseInt(feature.properties[year]['ELECTORS'].value) - parseInt(feature.properties[year]['VOTER_TURNOUT'].value))
           labels.push("Didn't Vote")
-          backgroundColor.push("#ffffff")
+          backgroundColor.push("#595959")
           layer.setStyle({fillOpacity: 0.9, weight:3})
           
           // Create dynamic chart
@@ -243,12 +318,97 @@ function onEachFeature(feature, layer) {
         },
         click: function()
           {
-            $(".loader").fadeIn()
-            map.fitBounds(layer.getBounds());
-            chloropleth.clearLayers()
-            console.log("Clicked on " + feature.properties.ED_ID)
-            showPd('file:///C:/Users/mackenzien/Documents/MKN/git/preomap/pdvotescastdata_simplified.geojson',feature.properties.ED_ID)
+            thisEd = feature.properties.ED_ID
+            if(pdFile != "")
+            {
+              $(".loader").fadeIn()
+              map.fitBounds(layer.getBounds());
+              chloropleth.clearLayers()
+              console.log("Clicked on " + feature.properties.ED_ID)
+              showPd('https://raw.githubusercontent.com/mackeynichols/freetheelectorate/master/pdvotescastdata_simplified.geojson',feature.properties.ED_ID)
+            }
+            
           }
+    });
+}
+
+function onEachFeaturePd(feature, layer) {
+  
+  
+  /*layer.bindPopup("<h5>" + feature.properties.ENGLISH_NA.replace("--", " - ") + " / "+feature.properties.FRENCH_NAM.replace("--", " - ") + "</h5><hr>"
+                  + "<b>Number of Electors in "+year+": </b>" +  feature.properties[year]["ELECTORS"]["value"]+"<br>"
+                  + "<b>Voter Turnout in "+year+": </b>" + feature.properties[year]["VOTER_TURNOUT"]["value"] + " (" + Math.round(feature.properties[year]["VOTER_TURNOUT"]["value"]/feature.properties[year]["ELECTORS"]["value"]*100) + "%)<br>"
+                  + "<b>Winning Party in "+year+": </b>" + feature.properties[year]["WINNER"]["party"]
+                  )*/
+  
+    layer.on({
+        mouseover: function()
+        {
+          // Add textual info for polygon on top of doughnut chart
+          $('#charts').prepend("<h5> Polling Division #" + feature.properties.POLL_DIVIS +"</h5>")
+          
+          data = []
+          labels = []
+          backgroundColor = []
+          
+          // Only read party names, not voter stats
+          for(variable in feature.properties[year])
+          {
+            if(variable != "DECLINED" &variable != "ELECTORS" &variable != "REJECTED" &variable != "UNMARKED" &variable != "VOTER_TURNOUT" &variable != "WINNER" &variable != "")
+            {
+              // Push data, party names, party colors into chart.js arrays
+              data.push(feature.properties[year][variable]["value"])
+              if(variable == "NDP"){labels.push(variable)}else{labels.push(titleCase(variable.substr(0,30)))}
+              oldMapVariable = mapVariable
+              mapVariable = "WINNER"
+              backgroundColor.push(getColor(variable, ""))
+              mapVariable = oldMapVariable
+            }
+          }
+          // Create a "didnt vote" data, label, and color
+          data.push(parseInt(feature.properties[year]['ELECTORS'].value) - parseInt(feature.properties[year]['VOTER_TURNOUT'].value))
+          labels.push("Didn't Vote")
+          backgroundColor.push("#ffffff")
+          layer.setStyle({fillOpacity: 0.9, weight:3})
+          
+          // Create dynamic chart
+          var data = {
+            labels: labels,
+            datasets: [
+                {
+                    backgroundColor: backgroundColor,
+                    //label: feature.properties.ENGLISH_NA + " / "+feature.properties.FRENCH_NAM,
+                    borderWidth: 1,
+                    data: data,
+                }
+            ]
+            
+          };
+          var myBarChart = new Chart(ctx, 
+          {
+            type: 'doughnut',
+            data: data,
+            options: {
+              legend: {
+                position: 'right',
+                labels: {
+                  fontSize: 12
+                }
+              }
+            }
+            
+          });
+        },
+        
+        // Delete chart when mouse leaves polygon
+        mouseout: function()
+        {
+          layer.setStyle({fillOpacity: 0.6, weight:1})
+          $('#myChart').remove();
+          $('#charts').empty()
+          $('#charts').append('<canvas id="myChart"><canvas>');
+          ctx = document.getElementById("myChart");
+        }
     });
 }
 
@@ -273,7 +433,7 @@ map.on('load', function() {
       mode = "electors"
       document.getElementById("Options").innerHTML = '<input type="radio" name="Turnout" value="VOTER_TURNOUT"> Percent Turnout<br>'+
                                                       '<input type="radio" name="Turnout" value="REJECTED"> Percent Rejected<br>'+
-                                                      '<input type="radio" name="Turnout" value="UNMARKED"> Percent Unmarked<br><br>'
+                                                      '<input type="radio" name="Turnout" value="UNMARKED"> Percent Unmarked<br>'
       
     }
     
@@ -282,11 +442,24 @@ map.on('load', function() {
       {
         if(mode == "electors")
         {
-            chloropleth.clearLayers()
-            mapVariable = document.querySelector('input[name=Turnout]:checked').value;
-            valueType = 'value';
-            showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+          chloropleth.clearLayers()
+          mapVariable = document.querySelector('input[name=Turnout]:checked').value;
+          valueType = 'value';
+          
+          switch(edpd)
+          {
+            case 'ed':
+              showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+              break
+            
+            case 'pd':
+              showPd('https://raw.githubusercontent.com/mackeynichols/freetheelectorate/master/pdvotescastdata_simplified.geojson', thisEd)
+              break
+          }
+            
+            
         }
+        legendToggle()
       }
 
     // SET ELECTEES VIEW MODE
@@ -308,8 +481,18 @@ map.on('load', function() {
         {
           mapVariable = document.getElementById("party-picker").value
           chloropleth.clearLayers()
-          showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+          switch(edpd)
+          {
+            case 'ed':
+              showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+              break
+            
+            case 'pd':
+              showPd('https://raw.githubusercontent.com/mackeynichols/freetheelectorate/master/pdvotescastdata_simplified.geojson', thisEd)
+              break
+          }
         }
+        legendToggle()
       }
     }
     
@@ -318,16 +501,36 @@ map.on('load', function() {
     {
         console.log("Year changed to " + document.querySelector('input[name="year"]:checked').value)
         chloropleth.clearLayers();
-        
         year = document.querySelector('input[name="year"]:checked').value;  
-        showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+        switch(edpd)
+          {
+            case 'ed':
+              showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+              break
+            
+            case 'pd':
+              showPd('https://raw.githubusercontent.com/mackeynichols/freetheelectorate/master/pdvotescastdata_simplified.geojson', thisEd)
+              break
+          }
         
     }
     
-    
+
+      document.getElementById('backToEdView').onclick = function()
+      {
+        if(edpd == "pd"){
+          chloropleth.clearLayers();
+          showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+          map.setZoom(5)
+          edpd = "ed"
+        }
+
+      }
+   
     // FIRST FUNCTIONS
     
     showEd('https://raw.githubusercontent.com/CivicTechTO/freetheelectorate/master/edvotescastdata.geojson')
+    showPd('https://raw.githubusercontent.com/mackeynichols/freetheelectorate/master/pdvotescastdata_simplified.geojson',"")
     $("#sidebar").toggle(500)
     $("#charts").toggle(500)
     $("#sidebar-toggle").toggle(500)

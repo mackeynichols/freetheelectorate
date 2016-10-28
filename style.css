@@ -31,12 +31,22 @@ body { margin:0; padding:0; }
 
 #legend {
 
+    position: fixed;
+    top: 20px;
+    right: 5%;
+
+    background: rgba(245,245,245,0.9);
+    z-index: 99;
+}
+
+#backToEdViewWell {
+
     /* fixed within viewport */
     position: fixed;
 
     /* set position */
-    top: 20px;
-    right: 30px;
+    bottom: -1%;
+    right: 5%;
 
     background: rgba(245,245,245,0.9);
     z-index: 99;
@@ -70,3 +80,6 @@ body { margin:0; padding:0; }
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+#map{}
+
